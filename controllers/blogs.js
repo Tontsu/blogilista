@@ -30,16 +30,26 @@ blogsRouter.post('/', async (request, response) => {
     }
 
     if (body.title === undefined) {
-      return response.status(400).json({ error: 'title missing' })
+      return response.status(400).json({ error: 'bad request' })
+    }
+
+    if (body.url === undefined) {
+      return response.status(400).json({ error: 'bad request' })
     }
 
     const user = await User.findById(decodedToken.id)
+
+    let likes = body.likes
+
+    if (likes === undefined) {
+      likes = 0
+    }
 
     const blog = new Blog({
       title: body.title,
       author: body.author,
       url: body.url,
-      likes: body.likes,
+      likes: likes,
       user: user._id
     })
 
@@ -67,6 +77,27 @@ blogsRouter.delete('/:id', async (request, response) => {
   } catch (exception) {
     console.log(exception)
     response.status(400).send({ error: 'malformatted id'})
+  }
+})
+
+blogsRouter.put('/:id', async (request, response) => {
+  const body = request.body
+
+  const blog = {
+    title: body.title,
+    author: body.author,
+    url: body.url,
+    likes: body.likes
+  }
+
+  try {
+    console.log(request.params.id)
+    await Blog.findByIdAndUpdate(request.params.id, blog)
+
+    response.status(200).end()
+
+  } catch (exception){
+    response.status(500).json({ error: 'something went wrong' })
   }
 })
 
